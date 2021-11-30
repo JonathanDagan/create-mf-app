@@ -23,6 +23,8 @@ interface IBuilder {
     port: number,
 }
 
+// TODO: switch to singular function export instead of class representation
+// TODO: create a factory or a builder method instead of whats currently in place
 abstract class Builder {
   public static async mainFunction ({ type, language, framework, name, css, port }: IBuilder): Promise<void> {
     const replacements: IReplacements = {
