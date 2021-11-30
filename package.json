@@ -6,7 +6,7 @@
   "bin": "bin/create-mf-app.js",
   "scripts": {
     "start": "node bin/create-mf-app.js",
-    "lint": "eslint . --ext .js --fix",
+    "lint": "eslint . --ext .js,.ts --fix",
     "prepare": "husky install"
   },
   "author": "Jack Herrington",
@@ -20,6 +20,8 @@
   "devDependencies": {
     "@types/glob": "^7.2.0",
     "@types/ncp": "^2.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.5.0",
+    "@typescript-eslint/parser": "^5.5.0",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.3",
