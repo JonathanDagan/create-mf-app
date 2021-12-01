@@ -2,11 +2,14 @@
   "name": "create-mf-app",
   "version": "1.0.12",
   "description": "Create Module Federation apps",
-  "main": "src/index.js",
-  "bin": "bin/create-mf-app.js",
+  "main": "dist/src/index.js",
+  "bin": "dist/bin/create-mf-app.js",
   "scripts": {
     "start": "node bin/create-mf-app.js",
     "lint": "eslint . --ext .js,.ts --fix",
+    "build": "tsc",
+    "prebuild": "yarn del dist",
+    "postbuild": "cpy templates dist --parents",
     "prepare": "husky install"
   },
   "author": "Jack Herrington",
