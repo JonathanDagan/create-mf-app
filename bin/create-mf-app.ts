@@ -4,101 +4,100 @@ import shell from 'shelljs'
 import fs from 'fs'
 import path from 'path'
 
-import Builder from '../src/builder'
-const builder = Builder;
+import { builder } from '../src/builder'
 
 (async function () {
-    const answers = await inquirer.prompt([
-        {
-            type: 'input',
-            message: 'Pick the name of your app:',
-            name: 'name',
-            default: 'host'
-        },
-        {
-            type: 'list',
-            message: 'Project Type:',
-            name: 'type',
-            choices: ['Application', 'API Server', 'Library'],
-            default: 'Application'
-        }
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      message: 'Pick the name of your app:',
+      name: 'name',
+      default: 'host'
+    },
+    {
+      type: 'list',
+      message: 'Project Type:',
+      name: 'type',
+      choices: ['Application', 'API Server', 'Library'],
+      default: 'Application'
+    }
+  ])
+
+  if (answers.type === 'Library') {
+    builder(answers)
+  }
+
+  if (answers.type === 'API Server') {
+    const templates = fs
+      .readdirSync(path.join(__dirname, '../templates/server'))
+      .sort()
+
+    const serverAnswers = await inquirer.prompt([
+      {
+        type: 'input',
+        message: 'Port number:',
+        name: 'port',
+        default: '8080'
+      },
+      {
+        type: 'list',
+        message: 'Template:',
+        name: 'framework',
+        choices: templates,
+        default: 'express'
+      }
     ])
 
-    if (answers.type === 'Library') {
-        builder.mainFunction(answers)
-    }
+    builder({
+      ...answers,
+      ...serverAnswers,
+      type: 'Server',
+      language: 'typescript'
+    })
+  }
 
-    if (answers.type === 'API Server') {
-        const templates = fs
-            .readdirSync(path.join(__dirname, '../templates/server'))
-            .sort()
+  if (answers.type === 'Application') {
+    const templates = fs
+      .readdirSync(path.join(__dirname, '../templates/application'))
+      .sort()
 
-        const serverAnswers = await inquirer.prompt([
-            {
-                type: 'input',
-                message: 'Port number:',
-                name: 'port',
-                default: '8080'
-            },
-            {
-                type: 'list',
-                message: 'Template:',
-                name: 'framework',
-                choices: templates,
-                default: 'express'
-            }
-        ])
+    const appAnswers = await inquirer.prompt([
+      {
+        type: 'input',
+        message: 'Port number:',
+        name: 'port',
+        default: '8080'
+      },
+      {
+        type: 'list',
+        message: 'Framework:',
+        name: 'framework',
+        choices: templates,
+        default: 'react'
+      },
+      {
+        type: 'list',
+        message: 'Language:',
+        name: 'language',
+        choices: ['typescript', 'javascript'],
+        default: 'javascript'
+      },
+      {
+        type: 'list',
+        message: 'CSS:',
+        name: 'css',
+        choices: ['CSS', 'Tailwind'],
+        default: 'CSS'
+      }
+    ])
 
-        builder.mainFunction({
-            ...answers,
-            ...serverAnswers,
-            type: 'Server',
-            language: 'typescript'
-        })
-    }
+    builder({
+      ...answers,
+      ...appAnswers
+    })
+  }
 
-    if (answers.type === 'Application') {
-        const templates = fs
-            .readdirSync(path.join(__dirname, '../templates/application'))
-            .sort()
-
-        const appAnswers = await inquirer.prompt([
-            {
-                type: 'input',
-                message: 'Port number:',
-                name: 'port',
-                default: '8080'
-            },
-            {
-                type: 'list',
-                message: 'Framework:',
-                name: 'framework',
-                choices: templates,
-                default: 'react'
-            },
-            {
-                type: 'list',
-                message: 'Language:',
-                name: 'language',
-                choices: ['typescript', 'javascript'],
-                default: 'javascript'
-            },
-            {
-                type: 'list',
-                message: 'CSS:',
-                name: 'css',
-                choices: ['CSS', 'Tailwind'],
-                default: 'CSS'
-            }
-        ])
-
-        builder.mainFunction({
-            ...answers,
-            ...appAnswers
-        })
-    }
-
-    shell.echo(`Your '${answers.name}' project is ready to go.
+  shell.echo(`Your '${answers.name}' project is ready to go.
 
 Next steps:
 
