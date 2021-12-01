@@ -4,7 +4,7 @@ import shell from 'shelljs'
 import fs from 'fs'
 import path from 'path'
 
-import { builder } from '../src/builder'
+import { buildProject } from '../src/builder'
 
 (async function () {
   const answers = await inquirer.prompt([
@@ -24,7 +24,7 @@ import { builder } from '../src/builder'
   ])
 
   if (answers.type === 'Library') {
-    builder(answers)
+    buildProject(answers)
   }
 
   if (answers.type === 'API Server') {
@@ -48,7 +48,7 @@ import { builder } from '../src/builder'
       }
     ])
 
-    builder({
+    buildProject({
       ...answers,
       ...serverAnswers,
       type: 'Server',
@@ -91,7 +91,7 @@ import { builder } from '../src/builder'
       }
     ])
 
-    builder({
+    buildProject({
       ...answers,
       ...appAnswers
     })

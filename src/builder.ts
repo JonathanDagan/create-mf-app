@@ -15,7 +15,7 @@ interface IReplacements {
 }
 
 interface IBuilder {
-  type: 'Application' | 'Library' | 'Server',
+  type: 'application' | 'library' | 'server',
   name: string,
   framework: string,
   language: 'ts' | 'js',
@@ -24,20 +24,94 @@ interface IBuilder {
 }
 
 interface IProjectBuilder {
-  buildApp({ ...IReplacements }): Promise<void>;
-  buildServer({ ...IReplacements }): Promise<void>;
-  buildLibrary({ ...IReplacements }): Promise<void>;
+  buildApp(args: IBuilder): Promise<void>;
+  buildServer(args: IBuilder): Promise<void>;
+  buildLibrary(args: IBuilder): Promise<void>;
 }
 
-const buildProject = (projectBuilderOverrides: Partial<IProjectBuilder>) => {//eslint-disable-line
+const buildProject = (projectBuilderOverrides: Partial<IProjectBuilder>) => {
   const builder = {
-    buildApp: async (): Promise<void> => { },
-    buildServer: async (): Promise<void> => { },
-    buildLibrary: async (): Promise<void> => { },
+    buildApp: async (args: IBuilder, replacements: IReplacements): Promise<void> => {
+      await ncp(
+        path.join(__dirname, `../templates/${args.type}/${args.framework}/base`),
+        args.name,
+        () => { } // TODO: change callback to convention
+      )
+      await ncp(
+        path.join(__dirname, `../templates/${args.type}/${args.framework}/${replacements.LANGUAGE}`),
+        args.name,
+        () => { } // TODO: change callback to convention
+      )
+
+      const tailwind = args.css === 'Tailwind'
+      replacements.CSS_EXTENSION = tailwind ? 'scss' : 'css'
+      replacements.CONTAINER = tailwind
+        ? 'mt-10 text-3xl mx-auto max-w-6xl'
+        : 'container'
+      replacements.CSS = tailwind ? 'Tailwind' : 'Empty CSS'
+      replacements.PORT = args.port
+
+      if (tailwind) {
+        fs.unlinkSync(path.join(args.name, '/src/index.css'))
+
+        await ncp(
+          path.join(__dirname, '../templates/application-extras/tailwind'),
+          args.name,
+          () => { } // TODO: change callback to convention
+        )
+
+        const packageJSON = JSON.parse(
+          fs.readFileSync(path.join(args.name, 'package.json'), 'utf8')
+        )
+        packageJSON.devDependencies.tailwindcss = '^2.0.2'
+        fs.writeFileSync(
+          path.join(args.name, 'package.json'),
+          JSON.stringify(packageJSON, null, 2)
+        )
+      }
+    },
+    buildServer: async (args: IBuilder): Promise<void> => {
+      await ncp(
+        path.join(__dirname, `../templates/${args.type}/${args.framework}`),
+        args.name,
+        () => { } // TODO: change callback to convention
+      )
+    },
+    buildLibrary: async (args: IBuilder): Promise<void> => {
+      await ncp(path.join(__dirname, `../templates/${args.type}/typescript`), args.name, () => { }) // TODO: change callback to convention
+    },
     ...projectBuilderOverrides
   }
-  // this is stupid but i cba because of eslint
-  return () => { buildProject(builder) }
+
+  return async (args: IBuilder): Promise<void> => {
+    const replacements: IReplacements = {
+      NAME: args.name,
+      FRAMEWORK: args.framework,
+      SAFE_NAME: args.name.replace(/-/g, '_').trim(),
+      LANGUAGE: args.language,
+      PORT: args.port
+    }
+
+    switch (args.type) {
+      case 'application':
+        await builder.buildApp(args, replacements)
+        break
+      case 'server':
+        await builder.buildServer(args)
+        break
+      case 'library':
+        await builder.buildServer(args)
+        break
+    }
+
+    renameGitignore(args.name)
+
+    glob.sync(`${args.name}/**/*`).forEach((file) => {
+      if (fs.lstatSync(file).isFile()) {
+        templateFile(file, replacements)
+      }
+    })
+  }
 }
 
 const templateFile = (fileName: string, replacements: IReplacements): void => {
@@ -61,78 +135,4 @@ const renameGitignore = (projectName: string): void => {
   }
 }
 
-// TODO: create a factory or a builder method instead of whats currently in place
-const builder = async ({ type, language, framework, name, css, port }: IBuilder): Promise<void> => {
-  const replacements: IReplacements = {
-    NAME: name,
-    FRAMEWORK: framework,
-    SAFE_NAME: name.replace(/-/g, '_').trim(),
-    LANGUAGE: language
-  }
-
-  const tempDir = type.toLowerCase()
-
-  if (type === 'Library') {
-    await ncp(path.join(__dirname, `../templates/${tempDir}/typescript`), name, () => { }) // TODO: change callback to convention
-  }
-
-  if (type === 'Server') {
-    replacements.PORT = port
-
-    await ncp(
-      path.join(__dirname, `../templates/${tempDir}/${framework}`),
-      name,
-      () => { } // TODO: change callback to convention
-    )
-  }
-
-  if (type === 'Application') {
-    await ncp(
-      path.join(__dirname, `../templates/${tempDir}/${framework}/base`),
-      name,
-      () => { } // TODO: change callback to convention
-    )
-    await ncp(
-      path.join(__dirname, `../templates/${tempDir}/${framework}/${replacements.LANGUAGE}`),
-      name,
-      () => { } // TODO: change callback to convention
-    )
-
-    const tailwind = css === 'Tailwind'
-    replacements.CSS_EXTENSION = tailwind ? 'scss' : 'css'
-    replacements.CONTAINER = tailwind
-      ? 'mt-10 text-3xl mx-auto max-w-6xl'
-      : 'container'
-    replacements.CSS = tailwind ? 'Tailwind' : 'Empty CSS'
-    replacements.PORT = port
-
-    if (tailwind) {
-      fs.unlinkSync(path.join(name, '/src/index.css'))
-
-      await ncp(
-        path.join(__dirname, '../templates/application-extras/tailwind'),
-        name,
-        () => { } // TODO: change callback to convention
-      )
-
-      const packageJSON = JSON.parse(
-        fs.readFileSync(path.join(name, 'package.json'), 'utf8')
-      )
-      packageJSON.devDependencies.tailwindcss = '^2.0.2'
-      fs.writeFileSync(
-        path.join(name, 'package.json'),
-        JSON.stringify(packageJSON, null, 2)
-      )
-    }
-  }
-
-  renameGitignore(name)
-
-  glob.sync(`${name}/**/*`).forEach((file) => {
-    if (fs.lstatSync(file).isFile()) {
-      templateFile(file, replacements)
-    }
-  })
-}
-
-export { builder }
+export { buildProject }
