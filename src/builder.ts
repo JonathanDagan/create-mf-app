@@ -23,6 +23,23 @@ interface IBuilder {
   port: number,
 }
 
+interface IProjectBuilder {
+  buildApp({ ...IReplacements }): Promise<void>;
+  buildServer({ ...IReplacements }): Promise<void>;
+  buildLibrary({ ...IReplacements }): Promise<void>;
+}
+
+const buildProject = (projectBuilderOverrides: Partial<IProjectBuilder>) => {//eslint-disable-line
+  const builder = {
+    buildApp: async (): Promise<void> => { },
+    buildServer: async (): Promise<void> => { },
+    buildLibrary: async (): Promise<void> => { },
+    ...projectBuilderOverrides
+  }
+  // this is stupid but i cba because of eslint
+  return () => { buildProject(builder) }
+}
+
 const templateFile = (fileName: string, replacements: IReplacements): void => {
   let contents = fs.readFileSync(fileName, 'utf8').toString()
   Object.keys(replacements).forEach((key) => {
@@ -36,7 +53,7 @@ const templateFile = (fileName: string, replacements: IReplacements): void => {
   fs.writeFileSync(fileName, contents)
 }
 
-  // required for npm publish
+// required for npm publish
 const renameGitignore = (projectName: string): void => {
   const projectPath = path.join(__dirname, `../${projectName}`)
   if (fs.existsSync(`${projectPath}/gitignore`)) {
@@ -117,8 +134,5 @@ const builder = async ({ type, language, framework, name, css, port }: IBuilder)
     }
   })
 }
-
-
-
 
 export { builder }
