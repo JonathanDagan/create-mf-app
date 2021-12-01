@@ -3,3 +3,6 @@ templates
 
 # node stuff
 node_modules
+
+# package stuff
+dist
