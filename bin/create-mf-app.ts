@@ -3,7 +3,7 @@ import shell from 'shelljs'
 import fs from 'fs'
 import path from 'path'
 
-import { buildProject } from '../src/builder'
+import { buildProject } from '../src/builder.js'
 
 (async function () {
   const answers = await inquirer.prompt([

@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import glob from 'glob'
-import { ncp } from 'ncp'
+import ncp from 'ncp'
 
 interface IReplacements {
   NAME: string,
