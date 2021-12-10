@@ -1,7 +1,11 @@
 import inquirer from 'inquirer'
 import shell from 'shelljs'
 import fs from 'fs'
-import path from 'path'
+import path, { dirname } from 'path'
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 import { buildProject } from '../src/builder.js'
 
