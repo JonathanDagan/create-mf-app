@@ -2,12 +2,12 @@ import inquirer from 'inquirer'
 import shell from 'shelljs'
 import fs from 'fs'
 import path, { dirname } from 'path'
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { fileURLToPath } from 'url'
 
 import { buildProject } from '../src/builder.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename);
 
 (async function () {
   const answers = await inquirer.prompt([
